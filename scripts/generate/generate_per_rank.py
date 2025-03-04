@@ -64,12 +64,14 @@ if __name__ == "__main__":
         role_list = [role]
 
     os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(os.path.join(output_folder, "mp_data"), exist_ok=True)
+    os.makedirs(os.path.join(output_folder, "generated_audio"), exist_ok=True)
 
     with jsonlines.open(input_file) as reader:
         data = list(reader)
 
     new_data, total_text, total_file_path = process_data(data, role_list)
-    with jsonlines.open(os.path.join(output_folder, output_file), "w") as writer:
+    with jsonlines.open(os.path.join(output_folder, "mp_data", output_file), "w") as writer:
         writer.write_all(new_data)
 
     cosyvoice = CosyVoice2('pretrained_models/CosyVoice2-0.5B', load_jit=False, load_trt=False, fp16=False)
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     prompt_speech_16k = load_wav('./asset/zero_shot_prompt.wav', 16000)
     for text, file_path in zip(total_text, total_file_path):
         for i, j in enumerate(cosyvoice.inference_zero_shot(text, '希望你以后能够做的比我还好呦。', prompt_speech_16k, stream=False)):
-            torchaudio.save(file_path, j['tts_speech'], cosyvoice.sample_rate)
+            torchaudio.save(os.path.join(output_folder, "generated_audio", file_path), j['tts_speech'], cosyvoice.sample_rate)
         pbar.update(1)
 
 

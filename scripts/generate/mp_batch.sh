@@ -53,3 +53,8 @@ do
         -o $OUTPUT_FOLDER \
         -of "processed_mp_data_$i.jsonl" &
 done
+
+while [ $(ps aux | grep generate_per_rank | grep -v "grep" | wc -l) -gt 0 ]
+do
+    sleep 1
+done
