@@ -13,7 +13,7 @@ def process_data(data, role_list):
     total_text = []
     total_file_path = []
     new_data = []
-    for da in data:
+    for iterate_num, da in enumerate(data):
         idx = da['id']
         messages = da['messages']
         new_messages = []
@@ -22,7 +22,7 @@ def process_data(data, role_list):
             content = message['content']
             new_content = []
             for cont_idx, cont in enumerate(content):
-                file_path = f"{idx}_{turn}_{role}_{cont_idx}.wav"
+                file_path = f"sample_{iterate_num}_{idx}_{turn}_{role}_{cont_idx}.wav"
                 if cont["type"] == "audio_url":
                     # Lets only extract the file path
                     cont["audio_url"]["url"] = cont['audio_url']["url"].split("/")[-1]
