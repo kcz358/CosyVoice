@@ -23,6 +23,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -r|--range)
+      RANGE="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit 1
@@ -40,6 +45,7 @@ echo "NUM DEVICES       = ${NUM_DEVICES}"
 echo "INPUT FILE        = ${INPUT_FILE}"
 echo "OUTPUT FOLDER     = ${OUTPUT_FOLDER}"
 echo "OUTPUT FILE       = ${OUTPUT_FILE}"
+echo "RANGE             = ${RANGE}"
 
 for i in $(seq 1 $NUM_DEVICES)
 do
@@ -47,7 +53,8 @@ do
     python scripts/generate/generate_mp_data.py \
         -i $INPUT_FILE \
         -o "data" \
-        -r $i -w $NUM_DEVICES
+        -r $i -w $NUM_DEVICES \
+        --range $RANGE
 done
 
 
@@ -55,9 +62,9 @@ for i in $(seq 1 $NUM_DEVICES)
 do
     echo "Generating Voice data for device $i"
     CUDA_VISIBLE_DEVICES=$(($i - 1)) python scripts/generate/generate_per_rank.py \
-        -i "data/mp_data_$i.jsonl" \
+        -i "data/$RANGE/mp_data_$i.jsonl" \
         -o $OUTPUT_FOLDER \
-        -of "processed_mp_data_$i.jsonl" &
+        -of "processed_mp_data_$i.jsonl" --range $RANGE &
 done
 
 while [ $(ps aux | grep generate_per_rank | grep -v "grep" | wc -l) -gt 0 ]
@@ -67,8 +74,8 @@ done
 
 # We manually store the distributed data in mp_data
 python scripts/generate/generate_gather.py \
-    -i $OUTPUT_FOLDER/mp_data \
+    -i $OUTPUT_FOLDER/$RANGE \
     -o $OUTPUT_FOLDER/$OUTPUT_FILE
 
 # Clean up
-rm -rf $OUTPUT_FOLDER/mp_data
+rm -rf $OUTPUT_FOLDER/$RANGE

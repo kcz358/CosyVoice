@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", type=str, help="output folder")
     parser.add_argument("--output-file", "-of", type=str, help="output file")
     parser.add_argument("--role", choices=["user", "assistant", "all"], default="assistant")
+    parser.add_argument("--range", type=str, help="Range of the generated data, must in xx-yy format", default=None)
 
     args = parser.parse_args()
     input_file = args.input
@@ -63,15 +64,23 @@ if __name__ == "__main__":
     else:
         role_list = [role]
 
+    if args.range is not None:
+        data_range_split = args.range.split("-")
+        start, end = int(data_range_split[0]), int(data_range_split[1])
+        subfolder = f"{start}-{end}"
+        jsonl_folder = os.path.join(output_folder, subfolder)
+    else:
+        jsonl_folder = os.path.join(output_folder, "mp_data")
+
     os.makedirs(output_folder, exist_ok=True)
-    os.makedirs(os.path.join(output_folder, "mp_data"), exist_ok=True)
+    os.makedirs(jsonl_folder, exist_ok=True)
     os.makedirs(os.path.join(output_folder, "generated_audio"), exist_ok=True)
 
     with jsonlines.open(input_file) as reader:
         data = list(reader)
 
     new_data, total_text, total_file_path = process_data(data, role_list)
-    with jsonlines.open(os.path.join(output_folder, "mp_data", output_file), "w") as writer:
+    with jsonlines.open(os.path.join(jsonl_folder, output_file), "w") as writer:
         writer.write_all(new_data)
 
     cosyvoice = CosyVoice2('pretrained_models/CosyVoice2-0.5B', load_jit=False, load_trt=False, fp16=False)
